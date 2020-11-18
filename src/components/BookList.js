@@ -1,6 +1,6 @@
 import React from 'react';
 import {connect} from "react-redux";
-import { addBookToLoanCart } from '../actions';
+import {addBookToLoanCart} from '../actions';
 import history from "../history";
 
 const BookList = (props) => {
@@ -17,6 +17,7 @@ const BookList = (props) => {
                         <td>{book.isbn}</td>
                         <td>{book.title}</td>
                         <td>{book.authorName}</td>
+                        <td>{book.publishedYear}</td>
                         <td>{book.genreName}</td>
                         <td className="center aligned">
                             <i className="red minus icon"></i>
@@ -33,16 +34,20 @@ const BookList = (props) => {
                         <td>{book.isbn}</td>
                         <td>{book.title}</td>
                         <td>{book.authorName}</td>
+                        <td>{book.publishedYear}</td>
                         <td>{book.genreName}</td>
                         <td className="center aligned">
                             <i className="green checkmark icon"></i>
                         </td>
                         <td>{book.shelf}</td>
                         <td className="center aligned">
-                            <button className="ui button primary" onClick={() => props.addBookToLoanCart(book)}>Loan</button>
+                            <button className="ui button primary" onClick={() => props.addBookToLoanCart(book)}>Loan
+                            </button>
                         </td>
                         <td className="center aligned">
-                            <button className="ui button primary" onClick={() => history.push('/book/details/' + book.bookId)}>Details</button>
+                            <button className="ui button primary"
+                                    onClick={() => history.push('/book/details/' + book.bookId)}>Details
+                            </button>
                         </td>
                     </tr>
                 )
@@ -60,6 +65,7 @@ const BookList = (props) => {
                         <th>Isbn</th>
                         <th>Title</th>
                         <th>Author</th>
+                        <th>Published year</th>
                         <th>Genre</th>
                         <th>Available</th>
                         <th>Shelf</th>
@@ -68,7 +74,7 @@ const BookList = (props) => {
                     </tr>
                     </thead>
                     <tbody>
-                        {renderRow()}
+                    {renderRow()}
                     </tbody>
                 </table>
                 <div className="ui container center aligned">
@@ -79,13 +85,17 @@ const BookList = (props) => {
     };
 
     return (
-        <div className="ui container">
-            <h2 style={{textAlign:'center'}}>Found books</h2>
-            <div>
-                {renderTable()}
+        <div className="ui grid">
+            <div className="sixteen wide column centered">
+                <div className="ui container">
+                    <h2 style={{textAlign: 'center'}}>Found books</h2>
+                    <div>
+                        {renderTable()}
+                    </div>
+                </div>
             </div>
         </div>
-    )
+    );
 
 }
 
@@ -96,4 +106,4 @@ const mapStateToProps = (state) => {
     };
 };
 
-export default connect(mapStateToProps, { addBookToLoanCart })(BookList);
+export default connect(mapStateToProps, {addBookToLoanCart})(BookList);

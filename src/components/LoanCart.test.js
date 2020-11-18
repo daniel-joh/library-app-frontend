@@ -7,7 +7,7 @@ import {Provider} from "react-redux";
 import {applyMiddleware, createStore} from "redux";
 import LoanCart from "./LoanCart";
 
-const initialReducerState = {
+const initialReduxStateWithBooksInLoanCart = {
     library: {
         loanCart: [
             {
@@ -38,10 +38,16 @@ const initialReducerState = {
     }
 };
 
+const initialReduxStateWithNoBooksInLoanCart = {
+    library: {
+        loanCart: []
+    }
+};
+
 const render = (
     ui,
     {
-        initialState = initialState,
+        initialState,
         store = createStore(reducers, initialState, applyMiddleware(thunk)),
         ...renderOptions
     } = {},
@@ -59,7 +65,7 @@ afterEach(() => {
 
 describe('LoanCart', () => {
     it('should render table headers', () => {
-        render(<LoanCart/>, { initialState: initialReducerState});
+        render(<LoanCart/>, {initialState: initialReduxStateWithBooksInLoanCart});
 
         expect(screen.getByText('BookId')).toBeInTheDocument();
         expect(screen.getByText('Isbn')).toBeInTheDocument();
@@ -68,13 +74,13 @@ describe('LoanCart', () => {
         expect(screen.getByText('Shelf')).toBeInTheDocument();
     });
     it('should render buttons', () => {
-        render(<LoanCart/>, { initialState: initialReducerState});
+        render(<LoanCart/>, {initialState: initialReduxStateWithBooksInLoanCart});
 
         expect(screen.getByText('Loan books')).toBeInTheDocument();
         expect(screen.getByText('Clear cart')).toBeInTheDocument();
     });
     it('should render table row data if there are books in loancart', () => {
-        render(<LoanCart/>, { initialState: initialReducerState});
+        render(<LoanCart/>, {initialState: initialReduxStateWithBooksInLoanCart});
 
         expect(screen.getByText('156756')).toBeInTheDocument();
         expect(screen.getByText('345456')).toBeInTheDocument();
@@ -83,14 +89,19 @@ describe('LoanCart', () => {
         expect(screen.getByText('Stephen King')).toBeInTheDocument();
         expect(screen.getByText('Tom Clancy')).toBeInTheDocument();
     });
+    it('should render empty loan cart message if there are no books in loancart', () => {
+        render(<LoanCart/>, {initialState: initialReduxStateWithNoBooksInLoanCart});
+
+        expect(screen.getByText('Empty Loan Cart')).toBeInTheDocument();
+    });
     it('should render no table rows if Clear cart is clicked', async () => {
-        const {container} = render(<LoanCart/>, { initialState: initialReducerState});
+        const {container} = render(<LoanCart/>, {initialState: initialReduxStateWithBooksInLoanCart});
 
         fireEvent.click(screen.getByText('Clear cart'));
 
-        await waitFor(() => screen.getByText('Empty Loan Cart!'));
+        await waitFor(() => screen.getByText('Empty Loan Cart'));
 
-        expect(screen.getByText('Empty Loan Cart!')).toBeInTheDocument();
+        expect(screen.getByText('Empty Loan Cart')).toBeInTheDocument();
         expect(container.querySelector('td')).not.toBeInTheDocument();
     });
 

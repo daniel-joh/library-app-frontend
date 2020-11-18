@@ -1,13 +1,14 @@
 import React from 'react';
-import {render as rtlRender, screen } from '@testing-library/react';
+import {render as rtlRender, screen} from '@testing-library/react';
 import "@testing-library/jest-dom/extend-expect";
 import {Provider} from 'react-redux'
 import {applyMiddleware, createStore} from 'redux';
 import thunk from 'redux-thunk';
 import reducers from './../reducers';
 import BookList from "./BookList";
+import userEvent from "@testing-library/user-event";
 
-const initialReducerStateWithFoundBooks = {
+const initialReduxStateWithFoundBooks = {
     library: {
         foundBooks: [{
             bookId: 1,
@@ -24,7 +25,7 @@ const initialReducerStateWithFoundBooks = {
     }
 };
 
-const initialReducerStateWithNoFoundBooks = {
+const initialReduxStateWithNoFoundBooks = {
     library: {
         foundBooks: []
     }
@@ -33,7 +34,7 @@ const initialReducerStateWithNoFoundBooks = {
 const render = (
     ui,
     {
-        initialState = initialState,
+        initialState,
         store = createStore(reducers, initialState, applyMiddleware(thunk)),
         ...renderOptions
     } = {},
@@ -45,7 +46,7 @@ const render = (
 
 describe('BookList', () => {
     it('should render table headers', () => {
-        render(<BookList/>, { initialState: {} });
+        render(<BookList/>, {initialState: {}});
 
         expect(screen.getByText('BookId')).toBeInTheDocument();
         expect(screen.getByText('Isbn')).toBeInTheDocument();
@@ -56,12 +57,12 @@ describe('BookList', () => {
         expect(screen.getByText('Shelf')).toBeInTheDocument();
     });
     it('should render Back to Search button', () => {
-        render(<BookList/>, { initialState: {} });
+        render(<BookList/>, {initialState: {}});
 
         expect(screen.getByText('Back to Search')).toBeInTheDocument();
     });
     it('should render table data if books are found', () => {
-        render(<BookList/>, { initialState: initialReducerStateWithFoundBooks });
+        render(<BookList/>, {initialState: initialReduxStateWithFoundBooks});
 
         expect(screen.getByText('Stephen King')).toBeInTheDocument();
         expect(screen.getByText('123456789')).toBeInTheDocument();
@@ -71,10 +72,26 @@ describe('BookList', () => {
         expect(screen.getByText('Details')).toBeInTheDocument();
     });
     it('should not render table data and not show Loan and Details button, if books arent found', () => {
-        render(<BookList/>, { initialState: initialReducerStateWithNoFoundBooks });
+        render(<BookList/>, {initialState: initialReduxStateWithNoFoundBooks});
 
         expect(screen.queryByText('Loan')).toBeNull();
         expect(screen.queryByText('Details')).toBeNull();
+    });
+    it('should navigate to Book Details if Details is clicked', () => {
+        render(<BookList/>, {initialState: initialReduxStateWithFoundBooks});
+
+        const leftClick = {button: 0}
+        userEvent.click(screen.getByText('Details'), leftClick);
+
+        expect(screen.getByText('Pestens tid')).toBeInTheDocument();
+    });
+    it('should navigate to Search Books if Back to Search is clicked', () => {
+        render(<BookList/>, {initialState: initialReduxStateWithFoundBooks});
+
+        const leftClick = {button: 0}
+        userEvent.click(screen.getByText('Back to Search'), leftClick);
+
+        expect(screen.getByText('Isbn')).toBeInTheDocument();
     });
 
 });

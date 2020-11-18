@@ -26,10 +26,11 @@ export const clearLoanCart = () => dispatch => {
 
 export const createLoan = (loanDto) => async dispatch => {
     try {
-        const response = await apiCalls.createNewLoan(loanDto);
-        dispatch({type: 'CLEAR_LOAN_CART'});                               //loanCart is cleared when loan has been created
+        await apiCalls.createNewLoan(loanDto);
+        dispatch({type: 'CLEAR_LOAN_CART'});                    //loanCart is cleared when loan has been created
+        history.push('/loans/list');
     } catch (error) {
-        console.error(error);
+        console.log(error);
     }
 }
 
@@ -41,6 +42,49 @@ export const getLoans = (userId) => async dispatch => {
         return error;
     }
 };
+
+export const performLogin = (userDto) => async dispatch => {
+    try {
+        const response = await apiCalls.login(userDto);
+        userDto.id = response.data.id;
+
+        apiCalls.setAuthorizationHeader(userDto.username, userDto.password, true);
+
+        dispatch({type: 'LOGIN', payload: response.data});        //note: response.data does not have user password
+    } catch (error) {
+        return error;
+    }
+}
+
+export const performLogout = () => dispatch => {
+    apiCalls.setAuthorizationHeader(null, null, false);
+    dispatch({type: 'LOGOUT'});
+    history.push('/');
+}
+
+export const createUser = (userDto) => async dispatch => {
+    try {
+        await apiCalls.createUser(userDto);
+    } catch (error) {
+        return error;
+    }
+}
+
+export const updateUser = (userDto, currentUser) => async dispatch => {
+    try {
+        const response = await apiCalls.updateUser(userDto);
+
+        if (userDto.username && userDto.password && userDto.username !== currentUser.username) {
+            apiCalls.setAuthorizationHeader(userDto.username, userDto.password, true);
+        }
+
+        dispatch({type: 'UPDATE_USER', payload: response.data});
+    } catch (error) {
+        return error;
+    }
+}
+
+
 
 
 

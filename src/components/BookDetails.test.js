@@ -9,8 +9,8 @@ import {basePath} from '../config/properties';
 
 export function renderWithRouterMatch(ui,
                                       {
-                                          path = path,
-                                          route = route,
+                                          path,
+                                          route,
                                           history = createMemoryHistory({initialEntries: [route]})
                                       } = {}) {
     return {
@@ -20,7 +20,7 @@ export function renderWithRouterMatch(ui,
             </Router>
         )
     };
-};
+}
 
 const mockedBookResponse = {
     data: {
@@ -34,7 +34,6 @@ const mockedBookResponse = {
         imageUrl: "images/books/test.jpg",
         authorName: "Stephen King",
         genreName: "Thriller"
-
     }
 };
 
@@ -47,17 +46,26 @@ afterEach(() => {
 });
 
 describe('BookDetails', () => {
-    it('should render table headers', () => {
+    it('should render table headers', async () => {
+        getBookById.mockResolvedValueOnce(mockedBookResponse);
+
         renderWithRouterMatch(BookDetails, {
             route: "/book/details/1",
             path: "/book/details/:bookId"
         });
+
+        await waitFor(() => screen.getByText('Pestens tid'));
+
         expect(screen.getByText(/title/i)).toBeInTheDocument();
         expect(screen.getByText(/isbn/i)).toBeInTheDocument();
         expect(screen.getByText(/author/i)).toBeInTheDocument();
         expect(screen.getByText(/genre/i)).toBeInTheDocument();
         expect(screen.getByText(/pages/i)).toBeInTheDocument();
         expect(screen.getByText(/summary/i)).toBeInTheDocument();
+        expect(screen.getByText(/published/i)).toBeInTheDocument();
+        expect(screen.getByText(/pages/i)).toBeInTheDocument();
+        expect(screen.getByText(/format/i)).toBeInTheDocument();
+        expect(screen.getByText(/language/i)).toBeInTheDocument();
     });
     it('should render table row data', async () => {
         getBookById.mockResolvedValueOnce(mockedBookResponse);
@@ -87,28 +95,27 @@ describe('BookDetails', () => {
             path: "/book/details/:bookId"
         });
 
-        const image = container.querySelector('img');
-        await waitFor(() => image);
+        await waitFor(() => container.querySelector('img'));
 
-        expect(image.src).toContain(basePath + 'images/books/test.jpg');
+        expect(container.querySelector('img')).toBeInTheDocument();
+
+        expect(container.querySelector('img')).toHaveAttribute('src', basePath + 'images/books/test.jpg');
     });
-    it('api error when getting book should result in alert shown', async () => {
-        const alertSpy = jest.spyOn(window, 'alert').mockImplementationOnce(() => {
-        });
-
-        getBookById.mockRejectedValueOnce("Error!");
+    it('api error when getting book should result in error message shown', async () => {
+        getBookById.mockRejectedValueOnce();
 
         renderWithRouterMatch(BookDetails, {
             route: "/book/details/1",
             path: "/book/details/:bookId"
         });
 
-        await waitFor(() => screen.getByText(/title/i));
+        await waitFor(() => screen.getByText('Unable to find book'));
 
-        expect(window.alert).toBeCalledTimes(1);
-        alertSpy.mockRestore();
+        expect(screen.getByText('Unable to find book')).toBeInTheDocument();
     });
-
 });
+
+console.error = () => {
+};
 
 

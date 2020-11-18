@@ -1,15 +1,15 @@
 import React from 'react';
-import {render, screen, waitFor} from '@testing-library/react';
+import {fireEvent, render, screen, waitFor} from '@testing-library/react';
 import "@testing-library/jest-dom/extend-expect";
 import {Router, Route} from "react-router-dom";
 import {createMemoryHistory} from 'history';
-import {getLoanById} from "../apiCalls/apiCalls";
+import {getLoan, returnBookForUser} from "../apiCalls/apiCalls";
 import LoanDetails from "./LoanDetails";
 
 export function renderWithRouterMatch(ui,
                                       {
-                                          path = path,
-                                          route = route,
+                                          path,
+                                          route,
                                           history = createMemoryHistory({initialEntries: [route]})
                                       } = {}) {
     return {
@@ -38,7 +38,6 @@ const mockedLoanResponseContainingBookWithNoReturnDate = {
                 "returnedDate": null
             }
         ]
-
     }
 };
 
@@ -59,7 +58,6 @@ const mockedLoanResponseContainingBookWithReturnDate = {
                 "returnedDate": "2020-07-30"
             }
         ]
-
     }
 };
 
@@ -72,11 +70,15 @@ afterEach(() => {
 });
 
 describe('LoanDetails', () => {
-    it('should render table headers', () => {
-        const {getByText} = renderWithRouterMatch(LoanDetails, {
+    it('should render table headers', async () => {
+        getLoan.mockResolvedValueOnce(mockedLoanResponseContainingBookWithNoReturnDate);
+        renderWithRouterMatch(LoanDetails, {
             route: "/loan/details/1",
             path: "/loan/details/:loanId"
         });
+
+        await waitFor(() => screen.getByText('Book id'));
+
         expect(screen.getByText('Book id')).toBeInTheDocument();
         expect(screen.getByText('Isbn')).toBeInTheDocument();
         expect(screen.getByText('Title')).toBeInTheDocument();
@@ -87,7 +89,7 @@ describe('LoanDetails', () => {
     });
 
     it('should render table row data for a loan with a non-returned book', async () => {
-        getLoanById.mockResolvedValueOnce(mockedLoanResponseContainingBookWithNoReturnDate);
+        getLoan.mockResolvedValueOnce(mockedLoanResponseContainingBookWithNoReturnDate);
 
         const {container} = renderWithRouterMatch(LoanDetails, {
             route: "/loan/details/1",
@@ -101,7 +103,7 @@ describe('LoanDetails', () => {
         expect(container.querySelector('i')).toBeInTheDocument();       //Icon for a loan being not returned
     });
     it('should render table row data for a loan with a returned book', async () => {
-        getLoanById.mockResolvedValueOnce(mockedLoanResponseContainingBookWithReturnDate);
+        getLoan.mockResolvedValueOnce(mockedLoanResponseContainingBookWithReturnDate);
 
         const {container} = renderWithRouterMatch(LoanDetails, {
             route: "/loan/details/2",
@@ -123,21 +125,52 @@ describe('LoanDetails', () => {
         });
         expect(screen.getByText('Back to Loan List')).toBeInTheDocument();
     });
-    it('api error when getting loan should result in alert shown', async () => {
-        const alertSpy = jest.spyOn(window, 'alert').mockImplementationOnce(() => {
-        });
-
-        getLoanById.mockRejectedValueOnce("Error!");
+    it('api error when getting loan should result in error message shown', async () => {
+        getLoan.mockRejectedValueOnce();
 
         renderWithRouterMatch(LoanDetails, {
             route: "/loan/details/1",
             path: "/loan/details/:loanId"
         });
 
-        await waitFor(() => screen.getByText(/title/i));
+        await waitFor(() => screen.getByText('Unable to get loan'));
 
-        expect(window.alert).toBeCalledTimes(1);
-        alertSpy.mockRestore();
+        expect(screen.getByText('Unable to get loan')).toBeInTheDocument();
+    });
+    it('clicking Return book should call returnBookForUser', async () => {
+        getLoan.mockResolvedValueOnce(mockedLoanResponseContainingBookWithNoReturnDate);
+        returnBookForUser.mockResolvedValueOnce(mockedLoanResponseContainingBookWithReturnDate);
+
+        renderWithRouterMatch(LoanDetails, {
+            route: "/loan/details/1",
+            path: "/loan/details/:loanId"
+        });
+
+        await waitFor(() => screen.getByText('Pestens tid'));
+
+        fireEvent.click(screen.getByText('Return book'));
+
+        expect(returnBookForUser).toBeCalledTimes(1);
+    });
+    it('api error when clicking Return book should result in error message shown', async () => {
+        getLoan.mockResolvedValueOnce(mockedLoanResponseContainingBookWithNoReturnDate);
+        returnBookForUser.mockRejectedValueOnce();
+
+        renderWithRouterMatch(LoanDetails, {
+            route: "/loan/details/1",
+            path: "/loan/details/:loanId"
+        });
+
+        await waitFor(() => screen.getByText('Pestens tid'));
+
+        fireEvent.click(screen.getByText('Return book'));
+
+        await waitFor(() => screen.getByText('Failed to return book!'));
+
+        expect(screen.getByText('Failed to return book!')).toBeInTheDocument();
     });
 
 });
+
+console.error = () => {
+};

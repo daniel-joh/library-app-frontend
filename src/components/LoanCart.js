@@ -3,6 +3,7 @@ import {connect} from "react-redux";
 import {removeBookFromLoanCart, clearLoanCart, createLoan} from "../actions";
 
 const LoanCart = (props) => {
+
     const renderRow = () => {
         return props.loanCart.map(book => {
             return (
@@ -13,48 +14,54 @@ const LoanCart = (props) => {
                     <td>{book.authorName}</td>
                     <td>{book.shelf}</td>
                     <td className="center aligned">
-                        <button className="ui button primary" onClick={() => props.removeBookFromLoanCart(book.bookId)}>
+                        <button className="ui button negative"
+                                onClick={() => props.removeBookFromLoanCart(book.bookId)}>
                             <i className="delete icon"></i>
                         </button>
                     </td>
                 </tr>
             )
-
         });
     };
 
     const renderTable = () => {
         if (!props.loanCart || props.loanCart.length === 0) {
             return (
-                <div>
-                    <h2>Empty Loan Cart!</h2>
+                <div className="ui info message">
+                    <div className="header">
+                        Empty Loan Cart
+                    </div>
                 </div>
             )
         }
 
         return (
-            <div>
-                <h2>Loan Cart</h2>
-                <table className="ui selectable celled table">
-                    <thead>
-                    <tr>
-                        <th>BookId</th>
-                        <th>Isbn</th>
-                        <th>Title</th>
-                        <th>Author</th>
-                        <th>Shelf</th>
-                        <th></th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {renderRow()}
-                    </tbody>
-                </table>
-                <div className="ui container center aligned">
-                    <button onClick={() => createLoaned(1)} className="ui button primary">Loan books</button>
-                    <button style={{marginLeft: '30px'}} onClick={props.clearLoanCart}
-                            className="ui button negative">Clear cart
-                    </button>
+            <div className="ui grid">
+                <div className="sixteen wide column centered">
+                    <h2>Loan Cart</h2>
+                    <table className="ui selectable celled table">
+                        <thead>
+                        <tr>
+                            <th>BookId</th>
+                            <th>Isbn</th>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>Shelf</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {renderRow()}
+                        </tbody>
+                    </table>
+                    <div className="ui container center aligned">
+                        <button onClick={() => createLoaned(props.currentUser.id)} className="ui button primary">Loan
+                            books
+                        </button>
+                        <button style={{marginLeft: '30px'}} onClick={props.clearLoanCart}
+                                className="ui button negative">Clear cart
+                        </button>
+                    </div>
                 </div>
             </div>
         )
@@ -86,7 +93,8 @@ const LoanCart = (props) => {
 
 const mapStateToProps = (state) => {
     return {
-        loanCart: state.library.loanCart
+        loanCart: state.library.loanCart,
+        currentUser: state.library.currentUser
     };
 };
 

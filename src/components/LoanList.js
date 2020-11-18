@@ -1,19 +1,47 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {connect} from "react-redux";
 import history from "../history";
 import {getLoans} from '../actions';
 
 const LoanList = (props) => {
+    const [errorMessage, setErrorMessage] = useState();
+
     useEffect(() => {
         const getLoans = async (userId) => {
             const possibleError = await props.getLoans(userId);
 
             if (possibleError) {
-                alert('Failed to get loans!');      //todo: needs a real popup..
+                setErrorMessage('Failed to get loans!');
             }
         }
-        getLoans(1);        //todo: userId should come from User object
+        if (props.currentUser) {
+            getLoans(props.currentUser.id);
+        }
     }, []);
+
+    const renderErrorMessage = () => {
+        if (errorMessage) {
+            return (
+                <div className="ui negative message">
+                    <div className="header">
+                        {errorMessage}
+                    </div>
+                </div>
+            );
+        }
+    };
+
+    const renderNoLoansMessage = () => {
+        if (props.loans && props.loans.length === 0) {
+            return (
+                <div className="ui info message">
+                    <div className="header">
+                        No loans available!
+                    </div>
+                </div>
+            );
+        }
+    };
 
     const renderRow = () => {
         return props.loans.map((loan) => {
@@ -25,7 +53,11 @@ const LoanList = (props) => {
                             <i className="green checkmark icon"></i>
                         </td>
                         <td>{loan.createdDate}</td>
-                        <td className="center aligned"><button onClick={() => history.push('/loan/details/' + loan.loanId)} className="ui button primary">Details</button></td>
+                        <td className="center aligned">
+                            <button onClick={() => history.push('/loan/details/' + loan.loanId + '/' + loan.userId)}
+                                    className="ui button primary">Details
+                            </button>
+                        </td>
                     </tr>
                 )
             } else {
@@ -36,7 +68,11 @@ const LoanList = (props) => {
                             <i className="red minus icon"></i>
                         </td>
                         <td>{loan.createdDate}</td>
-                        <td className="center aligned"><button onClick={() => history.push('/loan/details/' + loan.loanId)} className="ui button primary">Details</button></td>
+                        <td className="center aligned">
+                            <button onClick={() => history.push('/loan/details/' + loan.loanId + '/' + loan.userId)}
+                                    className="ui button primary">Details
+                            </button>
+                        </td>
                     </tr>
                 )
             }
@@ -44,29 +80,37 @@ const LoanList = (props) => {
     };
 
     const renderTable = () => {
-        return (
-            <div>
-                <table className="ui selectable celled table">
-                    <thead>
-                    <tr>
-                        <th>Loan id</th>
-                        <th>Active</th>
-                        <th>Created date</th>
-                        <th></th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {renderRow()}
-                    </tbody>
-                </table>
-            </div>
-        )
+        if (props.loans && props.loans.length > 0) {
+            return (
+                <div>
+                    <table className="ui selectable celled table">
+                        <thead>
+                        <tr>
+                            <th>Loan id</th>
+                            <th>Active</th>
+                            <th>Created date</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {renderRow()}
+                        </tbody>
+                    </table>
+                </div>
+            )
+        }
     };
 
     return (
-        <div className="ui container">
-            <div>
-                {renderTable()}
+        <div className="ui grid">
+            <div className="twelve wide column centered">
+                <div className="ui container">
+                    <div>
+                        {renderTable()}
+                        {renderErrorMessage()}
+                        {renderNoLoansMessage()}
+                    </div>
+                </div>
             </div>
         </div>
     )
@@ -74,7 +118,9 @@ const LoanList = (props) => {
 
 const mapStateToProps = (state) => {
     return {
-        loans: state.library.loans
+        loans: state.library.loans,
+        userIsLoggedIn: state.library.userIsLoggedIn,
+        currentUser: state.library.currentUser
     };
 };
 
